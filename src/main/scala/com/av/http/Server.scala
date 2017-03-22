@@ -2,6 +2,7 @@ package com.av.http
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.StdIn
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
@@ -9,21 +10,32 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 
 
-object Server extends App {
+import com.av.websocket.WebSocketFlowsT
+
+object Server extends App with WebSocketFlowsT {
   implicit val system = ActorSystem("http-system")
   implicit val materializer = ActorMaterializer()
 
   val route =
+    path("wsecho") {
+      handleWebSocketMessages(echo)
+    } ~
+    path("wsechoSub"){
+      handleWebSocketMessagesForProtocol(echo, "support")
+    } ~
+    path("wsechoOptSub"){
+      handleWebSocketMessagesForOptionalProtocol(echo, Some("help"))
+    } ~
     get {
       pathSingleSlash {
         complete(HttpEntity(ContentTypes.`text/html(UTF-8)`,"<html><body>Hello world!</body></html>"))
       } ~
-        path("ping") {
-          complete("PONG!")
-        } ~
-        path("crash") {
-          sys.error("BOOM!")
-        }
+      path("ping") {
+        complete("PONG!")
+      } ~
+      path("crash") {
+        sys.error("BOOM!")
+      }
     } ~
     post {
       path("post") {
@@ -33,10 +45,10 @@ object Server extends App {
       }
     }
 
-  val bindingFuture = Http().bindAndHandle(route, "localhost", 8080)
-  println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
-  StdIn.readLine() // let it run until user presses return
+  val bindingFuture = Http().bindAndHandle(route, "localhost", 9080)
+  println(s"Server online at http://localhost:9080/\nPress RETURN to stop...")
+  StdIn.readLine()
   bindingFuture
-    .flatMap(_.unbind()) // trigger unbinding from the port
-    .onComplete(_ => system.terminate()) // and shutdown when done
+    .flatMap(_.unbind())
+    .onComplete(_ => system.terminate())
 }
