@@ -23,6 +23,9 @@ object Server extends App with WebSocketFlowsT {
     path("wsechoSub"){
       handleWebSocketMessagesForProtocol(echo, "support")
     } ~
+    path("wsechojanus"){
+      handleWebSocketMessagesForProtocol(echo, "janus-admin-protocol")
+    } ~
     path("wsechoOptSub"){
       handleWebSocketMessagesForOptionalProtocol(echo, Some("help"))
     } ~

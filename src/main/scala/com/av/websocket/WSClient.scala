@@ -39,11 +39,6 @@ object WSClient extends App {
       clientFlow = flow
     )
 
-  val connected = upgradeResponse.map {
-    case v: ValidUpgrade           => v.response
-    case r: InvalidUpgradeResponse => throw new RuntimeException(s"Caused by ${r.cause}. Resp: ${r.response}")
-  }
-
   val webSocketFlow = Http().webSocketClientFlow(
     WebSocketRequest(
       uri = "ws://localhost:9080/wsechoSub",
